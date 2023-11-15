@@ -1,8 +1,24 @@
 # đại diện cho 1 cái database
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from app import db, app
+from flask_login import UserMixin
+import enum
 
+class UserRoleEnum(enum.Enum):
+    USER = 1
+    ADMIN = 2
+
+class User(db.Model, UserMixin):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(50), nullable=False, unique=True)
+    username = Column(String(50), nullable=False, unique=True)
+    password = Column(String(50), nullable=False)
+
+    user_role = Column(Enum(UserRoleEnum), default=UserRoleEnum.USER)
+
+    def __str__(self):
+        return self.name
 
 class Categories(db.Model):
     __tablename__ = 'categories'
@@ -35,6 +51,11 @@ class Product(db.Model):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+
+        import hashlib
+        u = User(name='Admin', username='Admin', password=str(hashlib.md5('1234567'.encode('utf-8')).hexdigest()),user_role=UserRoleEnum.ADMIN)
+
+        db.session.add(u)
         c1 = Categories(name='Mobile')
         c2 = Categories(name='Table')
 
